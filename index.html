@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI CSV 翻译助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=Material+Symbols+Outlined:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="settings-panel">
+        <div class="panel-top">
+          <div class="engine-mark">
+            <span class="material-symbols-outlined">settings_suggest</span>
+          </div>
+          <div>
+            <div class="panel-badge">Translator Engine</div>
+            <h1>AI CSV 翻译工作台</h1>
+            <p class="panel-copy">通过自然语言上传 CSV、解析意图，并按批生成多语种结果文件。</p>
+          </div>
+        </div>
+
+        <section class="status-card">
+          <div class="status-card-head">
+            <p>当前工作模式</p>
+            <span class="status-dot"></span>
+          </div>
+          <strong>Browser Local Session</strong>
+          <div class="status-grid">
+            <div>
+              <span>数据存储</span>
+              <b>仅浏览器本地</b>
+            </div>
+            <div>
+              <span>任务模式</span>
+              <b>CSV Batch Translate</b>
+            </div>
+          </div>
+        </section>
+
+        <div class="panel-section-label">Connection</div>
+        <section class="settings-card">
+          <div class="section-heading">
+            <h2>模型设置</h2>
+            <p>API Key 仅保存在当前浏览器的 Local Storage 中，不会上传到你的服务器。</p>
+          </div>
+
+          <label class="field">
+            <span>服务商</span>
+            <select id="providerSelect"></select>
+          </label>
+
+          <label class="field">
+            <span>预设模型</span>
+            <select id="modelPresetSelect"></select>
+          </label>
+
+          <label class="field">
+            <span>模型 ID</span>
+            <input
+              id="modelInput"
+              type="text"
+              placeholder="例如：gpt-4o-mini / gemini-1.5-pro"
+              autocomplete="off"
+            />
+          </label>
+
+          <label class="field">
+            <span>API Base URL</span>
+            <input
+              id="baseUrlInput"
+              type="text"
+              placeholder="保留默认即可，支持替换为兼容网关"
+              autocomplete="off"
+            />
+          </label>
+
+          <label class="field">
+            <span>API Key</span>
+            <div class="password-row">
+              <input
+                id="apiKeyInput"
+                type="password"
+                placeholder="输入对应模型的 API Key"
+                autocomplete="off"
+              />
+              <button id="toggleKeyButton" type="button" class="ghost-button">显示</button>
+            </div>
+          </label>
+
+          <div class="security-note">
+            您的 API Key 仅存储在浏览器本地（Local Storage），不会上传至任何服务器，请放心使用。
+          </div>
+        </section>
+
+        <div class="panel-section-label">Execution</div>
+        <section class="settings-card">
+          <div class="section-heading">
+            <h2>翻译参数</h2>
+            <p>默认按 20 行一批处理，可平衡上下文长度与稳定性。</p>
+          </div>
+
+          <label class="field">
+            <span>批次大小</span>
+            <input id="batchSizeInput" type="number" min="5" max="50" step="1" />
+          </label>
+
+          <label class="field">
+            <span>并发批次数</span>
+            <input id="concurrencyInput" type="number" min="1" max="4" step="1" />
+          </label>
+
+          <label class="field">
+            <span>失败重试次数</span>
+            <input id="retryInput" type="number" min="0" max="5" step="1" />
+          </label>
+        </section>
+      </aside>
+
+      <main class="chat-panel">
+        <header class="chat-header">
+          <div class="chat-header-main">
+            <p class="eyebrow">Workflow</p>
+            <h2>上传 CSV，并直接下达翻译指令</h2>
+            <p class="chat-subcopy">像对话一样提交翻译任务，系统会自动识别中文列、拆分批次并生成结果文件。</p>
+          </div>
+          <div class="chat-header-actions">
+            <div class="header-chip">
+              <span class="material-symbols-outlined">cloud_done</span>
+              <span>Local-first Session</span>
+            </div>
+            <button id="clearChatButton" type="button" class="ghost-button toolbar-button">
+              <span class="material-symbols-outlined">ink_eraser</span>
+              <span>清空会话</span>
+            </button>
+          </div>
+        </header>
+
+        <section id="dropzone" class="dropzone">
+          <input id="fileInput" type="file" accept=".csv,text/csv" hidden />
+          <div class="dropzone-copy">
+            <strong>拖拽 CSV 到这里</strong>
+            <span>或点击下方按钮选择文件。支持 UTF-8、GB18030、GBK、GB2312、Big5、UTF-16 等常见 CSV 编码。</span>
+          </div>
+          <div id="selectedFileCard" class="selected-file hidden"></div>
+          <div class="dropzone-actions">
+            <button id="pickFileButton" type="button" class="primary-button">选择 CSV 文件</button>
+            <button id="removeFileButton" type="button" class="ghost-button hidden">移除文件</button>
+          </div>
+        </section>
+
+        <section id="messages" class="messages" aria-live="polite"></section>
+
+        <form id="composer" class="composer">
+          <textarea
+            id="promptInput"
+            rows="3"
+            placeholder="例如：把这份表格里的内容翻译成英语、日语和韩语"
+          ></textarea>
+          <div class="composer-footer">
+            <p class="composer-tip">Enter 发送，Shift + Enter 换行</p>
+            <button id="sendButton" type="submit" class="primary-button">
+              <span class="material-symbols-outlined">send</span>
+              <span>发送并翻译</span>
+            </button>
+          </div>
+        </form>
+
+        <p class="footer-note">AI 可能会犯错，重要翻译请再次核对。</p>
+      </main>
+    </div>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="message-meta"></div>
+        <div class="message-bubble"></div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
