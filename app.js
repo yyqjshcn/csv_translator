@@ -399,8 +399,7 @@ async function handleSubmit(event) {
   });
 
   try {
-    const csvText = await readCsvText(state.selectedFile);
-    const { rows, headers } = parseCsv(csvText);
+    const { rows, headers } = await readAndParseCsv(state.selectedFile);
     if (!rows.length) {
       throw new AppError("上传的 CSV 没有可处理的数据行。");
     }
@@ -754,35 +753,68 @@ function containsChinese(value) {
   return /[\u3400-\u9fff]/.test(String(value ?? ""));
 }
 
-async function readCsvText(file) {
+async function readAndParseCsv(file) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const bomEncoding = detectBomEncoding(bytes);
+  const triedEncodings = new Set();
+  const analyses = [];
 
   if (bomEncoding) {
+    triedEncodings.add(bomEncoding);
     const text = decodeBytes(bytes, bomEncoding, true);
-    if (looksLikeCsvText(text)) {
-      return text;
+    const analysis = analyzeDecodedCsv(text, bomEncoding, true);
+    if (analysis) {
+      analyses.push(analysis);
     }
   }
 
-  let bestResult = null;
   for (const encoding of CSV_ENCODING_CANDIDATES) {
-    const text = decodeBytes(bytes, encoding, false);
-    if (!text) {
+    if (triedEncodings.has(encoding)) {
       continue;
     }
 
-    const score = scoreDecodedCsv(text, encoding);
-    if (!bestResult || score > bestResult.score) {
-      bestResult = { encoding, text, score };
+    const text = decodeBytes(bytes, encoding, false);
+    const analysis = analyzeDecodedCsv(text, encoding, false);
+    if (analysis) {
+      analyses.push(analysis);
     }
   }
 
-  if (bestResult?.text && looksLikeCsvText(bestResult.text)) {
-    return bestResult.text;
+  analyses.sort((left, right) => right.score - left.score);
+  const bestResult = analyses[0];
+
+  if (bestResult) {
+    return {
+      text: bestResult.text,
+      headers: bestResult.headers,
+      rows: bestResult.rows,
+      encoding: bestResult.encoding,
+    };
   }
 
   throw new AppError("抱歉，文件解析失败，请确保您上传的是标准 CSV，并尽量使用 UTF-8、GB18030、GBK、GB2312、Big5 或 UTF-16 编码。");
+}
+
+function analyzeDecodedCsv(text, encoding, fromBom) {
+  const normalized = String(text || "").replace(/^\uFEFF/, "");
+  if (!looksLikeCsvText(normalized)) {
+    return null;
+  }
+
+  try {
+    const { headers, rows } = parseCsv(normalized);
+    const score = scoreDecodedCsv(normalized, encoding, rows, headers, fromBom);
+
+    return {
+      encoding,
+      text: normalized,
+      headers,
+      rows,
+      score,
+    };
+  } catch (error) {
+    return null;
+  }
 }
 
 function detectBomEncoding(bytes) {
@@ -818,11 +850,27 @@ function looksLikeCsvText(text) {
   return lineCount >= 1 && normalized.length >= 2 && (delimiterHits > 0 || lineCount > 1);
 }
 
-function scoreDecodedCsv(text, encoding) {
+function scoreDecodedCsv(text, encoding, rows = [], headers = [], fromBom = false) {
   const normalized = String(text || "").replace(/^\uFEFF/, "");
   if (!normalized) {
     return Number.NEGATIVE_INFINITY;
   }
+
+  const chineseColumns = detectChineseColumns(rows);
+  let chineseCellCount = 0;
+  let nonEmptyCellCount = 0;
+  rows.forEach((row) => {
+    Object.values(row).forEach((value) => {
+      const textValue = String(value ?? "").trim();
+      if (!textValue) {
+        return;
+      }
+      nonEmptyCellCount += 1;
+      if (containsChinese(textValue)) {
+        chineseCellCount += 1;
+      }
+    });
+  });
 
   const lineCount = normalized.split(/\r\n|\n|\r/).filter(Boolean).length;
   const commaCount = (normalized.match(/,/g) || []).length;
@@ -840,16 +888,30 @@ function scoreDecodedCsv(text, encoding) {
   score += Math.min(tabCount, 120) * 2;
   score += Math.min(chineseCount, 120) * 1.4;
   score += Math.min(printableCount, 500) * 0.05;
+  score += Math.min(rows.length, 200) * 4;
+  score += Math.min(headers.length, 40) * 3;
+  score += Math.min(nonEmptyCellCount, 1000) * 0.15;
+  score += chineseColumns.length * 80;
+  score += Math.min(chineseCellCount, 200) * 3.5;
   score -= replacementCount * 25;
   score -= controlCount * 12;
   score -= mojibakeCount * 10;
   score -= suspiciousSeqCount * 6;
 
+  if (fromBom) {
+    score += 30;
+  }
   if (encoding === "utf-8") {
     score += 3;
   }
   if ((encoding === "gb18030" || encoding === "gbk" || encoding === "gb2312") && chineseCount > 0) {
     score += 4;
+  }
+  if (chineseCellCount > 0) {
+    score += 120;
+  }
+  if (rows.length > 0 && headers.length > 0) {
+    score += 20;
   }
 
   return score;
