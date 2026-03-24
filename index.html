@@ -21,8 +21,7 @@
           </div>
           <div>
             <div class="panel-badge">Translator Engine</div>
-            <h1>AI CSV 翻译工作台</h1>
-            <p class="panel-copy">通过自然语言上传 CSV、解析意图，并按批生成多语种结果文件。</p>
+            <h1>AI 翻译工作台</h1>
           </div>
         </div>
 
@@ -125,11 +124,6 @@
 
       <main class="chat-panel">
         <header class="chat-header">
-          <div class="chat-header-main">
-            <p class="eyebrow">Workflow</p>
-            <h2>上传 CSV，并直接下达翻译指令</h2>
-            <p class="chat-subcopy">像对话一样提交翻译任务，系统会自动识别中文列、拆分批次并生成结果文件。</p>
-          </div>
           <div class="chat-header-actions">
             <div class="header-chip">
               <span class="material-symbols-outlined">cloud_done</span>
@@ -142,27 +136,28 @@
           </div>
         </header>
 
-        <section id="dropzone" class="dropzone">
-          <input id="fileInput" type="file" accept=".csv,text/csv" hidden />
-          <div class="dropzone-copy">
-            <strong>拖拽 CSV 到这里</strong>
-            <span>或点击下方按钮选择文件。支持 UTF-8、GB18030、GBK、GB2312、Big5、UTF-16 等常见 CSV 编码。</span>
-          </div>
-          <div id="selectedFileCard" class="selected-file hidden"></div>
-          <div class="dropzone-actions">
-            <button id="pickFileButton" type="button" class="primary-button">选择 CSV 文件</button>
-            <button id="removeFileButton" type="button" class="ghost-button hidden">移除文件</button>
-          </div>
-        </section>
-
         <section id="messages" class="messages" aria-live="polite"></section>
 
         <form id="composer" class="composer">
-          <textarea
-            id="promptInput"
-            rows="3"
-            placeholder="例如：把这份表格里的内容翻译成英语、日语和韩语"
-          ></textarea>
+          <input id="fileInput" type="file" accept=".csv,text/csv" hidden />
+          <div class="composer-main">
+            <textarea
+              id="promptInput"
+              rows="3"
+              placeholder="例如：把这份表格里的内容翻译成英语、日语和韩语"
+            ></textarea>
+            <section id="dropzone" class="dropzone">
+              <div class="dropzone-copy">
+                <strong>拖拽 CSV 到这里</strong>
+                <span>或点击按钮选择文件。</span>
+              </div>
+              <div id="selectedFileCard" class="selected-file hidden"></div>
+              <div class="dropzone-actions">
+                <button id="pickFileButton" type="button" class="primary-button">选择 CSV 文件</button>
+                <button id="removeFileButton" type="button" class="ghost-button hidden">移除文件</button>
+              </div>
+            </section>
+          </div>
           <div class="composer-footer">
             <p class="composer-tip">Enter 发送，Shift + Enter 换行</p>
             <button id="sendButton" type="submit" class="primary-button">
