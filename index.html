@@ -4,12 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI CSV 翻译助手</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=Material+Symbols+Outlined:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
+
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -17,7 +12,7 @@
       <aside class="settings-panel">
         <div class="panel-top">
           <div class="engine-mark">
-            <span class="material-symbols-outlined">settings_suggest</span>
+            <span class="icon">⚙️</span>
           </div>
           <div>
             <div class="panel-badge">Translator Engine</div>
@@ -102,7 +97,7 @@
         <section class="settings-card">
           <div class="section-heading">
             <h2>翻译参数</h2>
-            <p>默认按 20 行一批处理，可平衡上下文长度与稳定性。</p>
+            <p>默认按 10 行一批处理，可平衡上下文长度与稳定性。</p>
           </div>
 
           <label class="field">
@@ -126,11 +121,11 @@
         <header class="chat-header">
           <div class="chat-header-actions">
             <div class="header-chip">
-              <span class="material-symbols-outlined">cloud_done</span>
+              <span class="icon">☁️</span>
               <span>Local-first Session</span>
             </div>
             <button id="clearChatButton" type="button" class="ghost-button toolbar-button">
-              <span class="material-symbols-outlined">ink_eraser</span>
+              <span class="icon">🧽</span>
               <span>清空会话</span>
             </button>
           </div>
@@ -161,7 +156,7 @@
           <div class="composer-footer">
             <p class="composer-tip">Enter 发送，Shift + Enter 换行</p>
             <button id="sendButton" type="submit" class="primary-button">
-              <span class="material-symbols-outlined">send</span>
+              <span class="icon">📤</span>
               <span>发送并翻译</span>
             </button>
           </div>

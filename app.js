@@ -31,7 +31,7 @@ const PROVIDERS = {
   },
   gemini: {
     label: "Gemini",
-    defaultBaseUrl: "https://generativelanguage.googleapis.com",
+    defaultBaseUrl: "",
     models: [
       { label: "Gemini 3.1 Pro (预览版)", value: "gemini-3.1-pro" },
       { label: "Gemini 3 Flash (预览版)", value: "gemini-3-flash" },
@@ -308,7 +308,7 @@ function renderSelectedFile() {
   elements.selectedFileCard.innerHTML = `
     <div class="selected-file-main">
       <div class="selected-file-icon">
-        <span class="material-symbols-outlined">description</span>
+        <span class="icon">📄</span>
       </div>
       <div>
         <div class="selected-file-name">${escapeHtml(state.selectedFile.name)}</div>
@@ -335,17 +335,17 @@ function renderEmptyState() {
     </div>
     <div class="empty-state-grid">
       <article class="empty-state-cell">
-        <span class="material-symbols-outlined">tune</span>
+        <span class="icon">⚙️</span>
         <strong>配置模型</strong>
         <p>在左侧填写模型、Base URL 和 API Key。</p>
       </article>
       <article class="empty-state-cell">
-        <span class="material-symbols-outlined">upload_file</span>
+        <span class="icon">📤</span>
         <strong>上传 CSV</strong>
         <p>支持拖拽或选择文件，适合标准纯文本 CSV。</p>
       </article>
       <article class="empty-state-cell">
-        <span class="material-symbols-outlined">translate</span>
+        <span class="icon">🌐</span>
         <strong>发送指令</strong>
         <p>直接输入“翻译成英语和日语”即可启动任务。</p>
       </article>
@@ -1316,7 +1316,7 @@ function applyMessageContent(node, { text, file, progress, download, streaming }
       <section class="file-chip">
         <div class="card-head">
           <div class="card-icon">
-            <span class="material-symbols-outlined">draft</span>
+            <span class="icon">📝</span>
           </div>
           <div>
             <strong>${escapeHtml(file.name)}</strong>
@@ -1362,7 +1362,7 @@ function applyMessageContent(node, { text, file, progress, download, streaming }
       <section class="download-card">
         <div class="card-head">
           <div class="card-icon">
-            <span class="material-symbols-outlined">download_done</span>
+            <span class="icon">⬇️✅</span>
           </div>
           <div>
             <strong>${escapeHtml(download.filename)}</strong>
